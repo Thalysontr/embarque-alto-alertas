@@ -31,114 +31,6 @@
     return '🌴';
   }
 
-  function capitalizeWords(s) {
-    return s.replace(/(^|\s)\S/g, (c) => c.toUpperCase());
-  }
-
-  // ---------- heurísticas de OCR (100% gratuito, roda no navegador) ----------
-  function extractTimes(text) {
-    const re = /\b([01]?\d|2[0-3]):([0-5]\d)\b/g;
-    return [...text.matchAll(re)].map((m) => `${m[1].padStart(2, '0')}:${m[2]}`);
-  }
-
-  function extractDates(text) {
-    const re = /\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/g;
-    return [...text.matchAll(re)].map((m) => {
-      const d = m[1].padStart(2, '0');
-      const mo = m[2].padStart(2, '0');
-      const y = m[3].length === 2 ? `20${m[3]}` : m[3];
-      return `${d}/${mo}/${y}`;
-    });
-  }
-
-  function extractMilhas(text) {
-    const m = text.match(/(\d[\d.,]{2,9})\s*milhas/i);
-    if (!m) return null;
-    const n = parseInt(m[1].replace(/[.,]/g, ''), 10);
-    return isFinite(n) ? n : null;
-  }
-
-  function extractValor(text) {
-    const m = text.match(/r\$\s*([\d]{1,3}(?:\.\d{3})*(?:,\d{2})?)/i);
-    if (!m) return null;
-    const n = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
-    return isFinite(n) ? n : null;
-  }
-
-  function extractDiarias(text) {
-    const m = text.match(/(\d+)\s*(di[aá]rias?|noites?)/i);
-    return m ? parseInt(m[1], 10) : null;
-  }
-
-  function detectCompanhia(text) {
-    const t = text.toLowerCase();
-    if (t.includes('latam')) return 'LATAM Airlines Brasil';
-    if (t.includes('smiles') || t.includes(' gol') || t.startsWith('gol')) return 'GOL Linhas Aéreas';
-    if (t.includes('azul')) return 'Azul Linhas Aéreas';
-    return null;
-  }
-
-  function detectDireto(text) {
-    if (/(escala|conex[aã]o|parada)/i.test(text)) return false;
-    if (/direto/i.test(text)) return true;
-    return null;
-  }
-
-  function detectDestinoConhecido(text) {
-    const t = text.toLowerCase();
-    for (const rule of EMOJI_RULES) {
-      for (const w of rule.words) {
-        if (w.length > 3 && t.includes(w)) return capitalizeWords(w);
-      }
-    }
-    return null;
-  }
-
-  function detectTipoPacote(text) {
-    const t = text.toLowerCase();
-    if (/(transfer|traslado)/.test(t)) return 'transfer';
-    if (/(hotel|check-?in|di[aá]ria)/.test(t)) return 'hotel';
-    return null;
-  }
-
-  function detectModalidade(text) {
-    const t = text.toLowerCase();
-    if (t.includes('privativo')) return 'Privativo';
-    if (t.includes('compartilhado')) return 'Compartilhado';
-    return null;
-  }
-
-  function parseVooTexto(text) {
-    const datas = extractDates(text);
-    const horas = extractTimes(text);
-    return {
-      destino: detectDestinoConhecido(text),
-      companhia: detectCompanhia(text),
-      direto: detectDireto(text),
-      milhas: extractMilhas(text),
-      ida: datas[0] ? { data: datas[0], saida: horas[0] || null, chegada: horas[1] || null } : null,
-      volta: datas[1] ? { data: datas[1], saida: horas[2] || null, chegada: horas[3] || null } : null,
-    };
-  }
-
-  function parsePacoteTexto(text) {
-    const datas = extractDates(text);
-    const tipo = detectTipoPacote(text);
-    return {
-      destino: detectDestinoConhecido(text),
-      tipo,
-      valor: extractValor(text),
-      hotel: tipo === 'transfer' ? null : {
-        checkin: datas[0] || null,
-        checkout: datas[1] || null,
-        diarias: extractDiarias(text),
-      },
-      transfer: tipo === 'hotel' ? null : {
-        modalidade: detectModalidade(text),
-      },
-    };
-  }
-
   // ---------- mode tabs ----------
   const modeTabs = document.querySelectorAll('.mode-tab');
   modeTabs.forEach((tab) => {
@@ -223,34 +115,29 @@
     const label = $('btnAnalisarLabel');
     btnAnalisar.disabled = true;
     spinner.hidden = false;
+    label.textContent = 'Lendo print…';
     setStatus('', '');
-    $('ocrRawWrap').hidden = true;
 
+    const endpoint = state.mode === 'voo' ? '/api/analisar-voo' : '/api/analisar-pacote';
     try {
-      const { data } = await Tesseract.recognize(state.imageDataUrl, 'por', {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            label.textContent = `Lendo print… ${Math.round((m.progress || 0) * 100)}%`;
-          } else {
-            label.textContent = 'Lendo print…';
-          }
-        },
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ imagem: state.imageDataUrl }),
       });
-      const texto = data.text || '';
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.erro || 'Falha ao ler o print.');
 
-      $('ocrRawText').textContent = texto.trim() || '(nenhum texto reconhecido)';
-      $('ocrRawWrap').hidden = false;
+      if (state.mode === 'voo') fillVoo(data);
+      else fillPacote(data);
 
-      if (state.mode === 'voo') fillVoo(parseVooTexto(texto));
-      else fillPacote(parsePacoteTexto(texto));
-
-      setStatus('✓ OCR gratuito preencheu o que conseguiu ler. Confira todos os campos antes de gerar o alerta.', 'ok');
+      setStatus('✓ Dados preenchidos pela IA. Confira antes de gerar o alerta.', 'ok');
     } catch (err) {
       setStatus(err.message || 'Erro ao ler o print. Preencha manualmente.', 'error');
     } finally {
       btnAnalisar.disabled = false;
       spinner.hidden = true;
-      label.textContent = 'Ler print (OCR grátis)';
+      label.textContent = 'Ler print com IA';
     }
   });
 

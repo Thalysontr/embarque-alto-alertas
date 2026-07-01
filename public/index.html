@@ -6,74 +6,50 @@
 <title>Embarque Alto — Gerador de Alertas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-
-<div class="sky"></div>
-<div class="grain"></div>
 
 <header class="topbar">
   <div class="brand">
     <span class="brand-mark">✈</span>
-    <div class="brand-text">
-      <strong>EMBARQUE ALTO</strong>
-      <small>gerador de alertas</small>
-    </div>
+    <span class="brand-name">Embarque Alto</span>
   </div>
-  <div class="topbar-deco">
-    <span>PROMOÇÕES</span>
-    <span class="dot">•</span>
-    <span>VOOS</span>
-    <span class="dot">•</span>
-    <span>PACOTES</span>
-  </div>
+  <span class="brand-tag">gerador de alertas</span>
 </header>
 
 <main class="wrap">
 
   <nav class="mode-tabs" role="tablist" aria-label="Tipo de alerta">
-    <button class="mode-tab is-active" data-mode="voo" role="tab" aria-selected="true">
-      <span class="mode-tab-icon">🛫</span>
-      <span>Alerta de Voo</span>
-    </button>
-    <button class="mode-tab" data-mode="pacote" role="tab" aria-selected="false">
-      <span class="mode-tab-icon">🧳</span>
-      <span>Alerta de Pacote</span>
-    </button>
+    <button class="mode-tab is-active" data-mode="voo" role="tab" aria-selected="true">Alerta de Voo</button>
+    <button class="mode-tab" data-mode="pacote" role="tab" aria-selected="false">Alerta de Pacote</button>
   </nav>
 
-  <div class="ticket">
+  <div class="grid">
 
     <!-- ============ COLUNA ESQUERDA: FORMULARIO ============ -->
-    <section class="stub stub-form">
+    <section class="card">
 
-      <div class="stub-head">
-        <span class="stub-eyebrow">passo 1</span>
+      <div class="card-head">
+        <span class="step">1</span>
         <h2>Envie o print</h2>
       </div>
 
       <label class="dropzone" id="dropzone">
         <input type="file" id="fileInput" accept="image/*" hidden />
         <div class="dropzone-inner" id="dropzoneInner">
-          <span class="dropzone-icon">📎</span>
           <span class="dropzone-text">Clique ou arraste o print aqui</span>
-          <span class="dropzone-sub">leitura por OCR gratuito, direto no navegador</span>
+          <span class="dropzone-sub">a IA lê os dados automaticamente</span>
         </div>
         <img id="previewImg" class="preview-img" hidden />
       </label>
 
-      <button class="btn btn-ghost" id="btnAnalisar" disabled>
+      <button class="btn btn-secondary" id="btnAnalisar" disabled>
         <span class="btn-spinner" hidden></span>
-        <span id="btnAnalisarLabel">Ler print (OCR grátis)</span>
+        <span id="btnAnalisarLabel">Ler print com IA</span>
       </button>
       <p class="hint" id="analiseStatus"></p>
-      <details class="ocr-raw" id="ocrRawWrap" hidden>
-        <summary>Texto reconhecido pelo OCR (conferir)</summary>
-        <pre id="ocrRawText"></pre>
-      </details>
 
       <div class="divider"><span>ou preencha manualmente</span></div>
 
@@ -100,7 +76,7 @@
         </div>
 
         <fieldset class="leg">
-          <legend>🛫 Ida</legend>
+          <legend>Ida</legend>
           <div class="field-row">
             <label>Data<input type="text" id="v_ida_data" placeholder="DD/MM/AAAA"></label>
             <label>Saída<input type="text" id="v_ida_saida" placeholder="HH:MM"></label>
@@ -109,7 +85,7 @@
         </fieldset>
 
         <fieldset class="leg">
-          <legend>🛬 Volta</legend>
+          <legend>Volta</legend>
           <div class="field-row">
             <label>Data<input type="text" id="v_volta_data" placeholder="DD/MM/AAAA"></label>
             <label>Saída<input type="text" id="v_volta_saida" placeholder="HH:MM"></label>
@@ -146,8 +122,8 @@
         </div>
 
         <div class="seg" id="pacoteTipoSeg">
-          <button type="button" class="seg-btn is-active" data-tipo="hotel">🏨 Hotel</button>
-          <button type="button" class="seg-btn" data-tipo="transfer">🚐 Transfer</button>
+          <button type="button" class="seg-btn is-active" data-tipo="hotel">Hotel</button>
+          <button type="button" class="seg-btn" data-tipo="transfer">Transfer</button>
         </div>
 
         <div id="pacoteHotelFields">
@@ -170,13 +146,13 @@
         </div>
       </div>
 
-      <div class="stub-head stub-head-2">
-        <span class="stub-eyebrow">passo 2</span>
+      <div class="card-head card-head-2">
+        <span class="step">2</span>
         <h2>Valores</h2>
       </div>
 
       <div class="milheiro-presets">
-        <span class="preset-label">Milheiro rápido:</span>
+        <span class="preset-label">Milheiro rápido</span>
         <button type="button" class="preset" data-v="26.50">LATAM 26,50</button>
         <button type="button" class="preset" data-v="28.50">LATAM 28,50</button>
         <button type="button" class="preset" data-v="25.00">LATAM 25,00</button>
@@ -196,14 +172,11 @@
       <button class="btn btn-primary" id="btnGerar">Gerar cálculo e alerta</button>
     </section>
 
-    <!-- ============ RECORTE / PERFURACAO ============ -->
-    <div class="perforation" aria-hidden="true"></div>
-
     <!-- ============ COLUNA DIREITA: RESULTADO ============ -->
-    <section class="stub stub-result">
-      <div class="stub-head">
-        <span class="stub-eyebrow">resultado</span>
-        <h2>Cartão de embarque</h2>
+    <section class="card card-result">
+      <div class="card-head">
+        <span class="step step-alt">✓</span>
+        <h2>Resultado</h2>
       </div>
 
       <div class="calc-box" id="calcBox" hidden>
@@ -216,15 +189,12 @@
 
       <div class="alert-box" id="alertBox" hidden>
         <pre id="alertText"></pre>
-        <button class="btn btn-copy" id="btnCopiar">📋 Copiar alerta</button>
+        <button class="btn btn-copy" id="btnCopiar">Copiar alerta</button>
       </div>
 
       <div class="empty-state" id="emptyState">
-        <span class="empty-icon">🎫</span>
         <p>Preencha os dados ao lado e clique em<br><strong>“Gerar cálculo e alerta”</strong></p>
       </div>
-
-      <div class="barcode" aria-hidden="true"></div>
     </section>
 
   </div>
@@ -232,9 +202,7 @@
 </main>
 
 <footer class="footer">
-  <span>Embarque Alto</span>
-  <span class="dot">•</span>
-  <span>uso interno da equipe</span>
+  Embarque Alto · uso interno da equipe
 </footer>
 
 <script src="app.js"></script>

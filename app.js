@@ -125,8 +125,11 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ imagem: state.imageDataUrl }),
       });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.erro || 'Falha ao ler o print.');
+      let data = null;
+      try { data = await resp.json(); } catch { data = null; }
+      if (!resp.ok || !data) {
+        throw new Error((data && data.erro) || 'Este link não tem a leitura automática configurada. Preencha manualmente.');
+      }
 
       if (state.mode === 'voo') fillVoo(data);
       else fillPacote(data);

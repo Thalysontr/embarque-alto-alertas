@@ -1,0 +1,13 @@
+{
+  "name": "embarque-alto-alertas",
+  "version": "1.0.0",
+  "description": "Gerador de alertas de voos e pacotes da Embarque Alto",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
